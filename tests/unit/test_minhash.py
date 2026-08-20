@@ -77,13 +77,13 @@ def test_rejects_non_string_shingles():
     )
 
 def test_minhash_estimate_approximates_jaccard():
-    left = {f"item-{i}" for i in range(100)}
-    right = {f"item-{i}" for i in range(50, 150)}
+    left = { f'item-{i}' for i in range( 100 ) }
+    right = { f'item-{i}' for i in range( 50, 150 ) }
 
-    left_signature = minhash_signature(left, num_hashes=512, seed=42)
-    right_signature = minhash_signature(right, num_hashes=512, seed=42)
+    left_signature = minhash_signature( left, num_hashes=512, seed=42 )
+    right_signature = minhash_signature( right, num_hashes=512, seed=42 )
 
     estimate = estimate_similarity( left_signature, right_signature )
 
     # Exact Jaccard is 50 / 150 == 1/3.
-    assert estimate == pytest.approx(1 / 3, abs=0.08)
+    assert estimate == pytest.approx( 1/3, abs=0.08 )
