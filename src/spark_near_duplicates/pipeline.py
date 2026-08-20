@@ -17,12 +17,30 @@ def find_near_duplicates(
   num_hashes: int=128, num_bands: int=32, similarity_threshold: float=0.8,
   seed: int=42,
 ) -> 'DataFrame':
-  '''Build a lazy, distributed near-duplicate detection pipeline.
+  '''Return near-duplicate document pairs as a lazy Spark DataFrame.
+
+  ``documents`` must contain distinct, non-null identifiers in ``id_column``
+  and text in ``text_column``. Identifiers are cast to strings; rows with null
+  identifiers, null text, or text too short to form a shingle are omitted.
 
   The returned DataFrame has ``left_id``, ``right_id``,
-  ``estimated_similarity`` and ``exact_similarity`` columns.  No Spark action
-  is called here: candidate generation and scoring remain on the executors.
-  Document identifiers are expected to be unique and non-null.
+  ``estimated_similarity`` and ``exact_similarity`` columns, in that order.
+  IDs are strings and similarity values are doubles. Pair IDs are ordered
+  lexicographically. No Spark action is called by this function.
+
+  Args:
+    documents: Input PySpark DataFrame.
+    id_column: Name of the unique document identifier column.
+    text_column: Name of the text column.
+    shingle_size: Number of normalized characters per shingle.
+    num_hashes: Number of values in each MinHash signature.
+    num_bands: Number of equal-sized LSH bands. Must divide ``num_hashes``.
+    similarity_threshold: Inclusive exact-Jaccard threshold in ``[0, 1]``.
+    seed: Unsigned 64-bit seed used to construct the hash family.
+
+  Raises:
+    TypeError: If a configuration argument has the wrong type.
+    ValueError: If columns are missing or a value is outside its valid range.
   '''
 
   from pyspark.sql import functions as F
@@ -157,14 +175,26 @@ def _validate_arguments(
   columns: list[str], *, id_column: str, text_column: str, shingle_size: int,
   num_hashes: int, num_bands: int, similarity_threshold: float, seed: int
 ) -> None:
+  if not isinstance( id_column, str ) or not id_column:
+    raise TypeError( 'id_column must be a non-empty string' )
+  if not isinstance( text_column, str ) or not text_column:
+    raise TypeError( 'text_column must be a non-empty string' )
+  if id_column == text_column:
+    raise ValueError( 'id_column and text_column must be different' )
   missing = { id_column, text_column }.difference( columns )
   if missing:
     raise ValueError( f'missing required columns: {sorted( missing )}' )
-  if not isinstance( shingle_size, int ) or shingle_size <= 0:
+  if not isinstance( shingle_size, int ):
+    raise TypeError( 'shingle_size must be an integer' )
+  if shingle_size <= 0:
     raise ValueError( 'shingle_size must be a positive integer' )
-  if not isinstance( num_hashes, int ) or num_hashes <= 0:
+  if not isinstance( num_hashes, int ):
+    raise TypeError( 'num_hashes must be an integer' )
+  if num_hashes <= 0:
     raise ValueError( 'num_hashes must be a positive integer' )
-  if not isinstance( num_bands, int ) or num_bands <= 0:
+  if not isinstance( num_bands, int ):
+    raise TypeError( 'num_bands must be an integer' )
+  if num_bands <= 0:
     raise ValueError( 'num_bands must be a positive integer' )
   if num_hashes % num_bands != 0:
     raise ValueError( 'num_hashes must be divisible by num_bands' )
@@ -172,5 +202,7 @@ def _validate_arguments(
     raise TypeError( 'similarity_threshold must be numeric' )
   if not 0 <= similarity_threshold <= 1:
     raise ValueError( 'similarity_threshold must be between 0 and 1' )
-  if not isinstance( seed, int ) or not 0 <= seed < 2**64:
+  if not isinstance( seed, int ):
+    raise TypeError( 'seed must be an integer' )
+  if not 0 <= seed < 2**64:
     raise ValueError( 'seed must be an integer between 0 and 2**64 - 1' )
