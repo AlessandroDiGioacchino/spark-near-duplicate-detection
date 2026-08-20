@@ -9,6 +9,7 @@ def jaccard_similarity( left: set[ str ], right: set[ str ] ) -> float:
 
   return float( intersection_length ) / float( union_length )
 
+
 def estimate_similarity( left: tuple[ int, ... ],
                          right: tuple[ int, ... ] ) -> float:
   '''Estimate Jaccard similarity from two MinHash signatures'''

@@ -25,6 +25,7 @@ def _hash_band( values: tuple[ int, ... ] ) -> str:
 
   return hasher.hexdigest()
 
+
 def band_signature(
     document_id: str,
     signature: tuple[ int, ... ],
