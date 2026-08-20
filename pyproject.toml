@@ -1,4 +1,54 @@
 
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spark-near-duplicate-detection"
+version = "0.1.0"
+description = "Find near-duplicates at scale"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "Alessandro Di Gioacchino" }
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Data Science",
+]
+
+dependencies = [
+    "pyspark>=3.5",
+]
+
+[project.optional-dependencies]
+# Dependencies for development (install with: pip install -e ".[dev]")
+dev = [
+    "pandas==2.3.3",
+    "pyarrow>=4.0.0",
+    "pytest",
+    "pytest-cov",
+]
+
+# Dependencies for Jupyter Notebooks
+# jlab = [
+#     "matplotlib",
+#     "numpy",
+#     "pandas",
+#     "scikit-learn",
+#     "scipy"
+# ]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--strict-markers", "--strict-config"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+# Standard linting settings
+line-length = 80
+select = ["E", "F", "I"]
